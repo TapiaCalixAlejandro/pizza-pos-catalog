@@ -16,8 +16,8 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-//@Entity
-//@Table(name = "ingredients")
+@Entity
+@Table(name = "ingredients")
 public class Ingredient {
 
     @Id
@@ -47,7 +47,7 @@ public class Ingredient {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "update_at", nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
