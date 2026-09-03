@@ -5,6 +5,8 @@ import com.msvc.catalog.dto.product.response.ProductResponse;
 import com.msvc.catalog.entity.Product;
 import com.msvc.catalog.mapper.ProductMapper;
 import com.msvc.catalog.repository.ProductRepository;
+import com.msvc.catalog.shared.constans.Messages;
+import com.msvc.catalog.shared.exception.BusinessException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +35,19 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
-        LOGGER.info("Creating product [name={}]", request.getName());
+        LOGGER.info(
+                "Creating product [name={}, type={}, price={}]",
+                request.getName(),
+                request.getProductType(),
+                request.getPrice()
+        );
 
-        if (productRepository.existsByNameAndDeletedAtIsNull(request.getName()))
-            throw new ResourceNotFoundException("El nombre del producto ya existe");
+        if (productRepository.existsByNameAndDeletedAtIsNull(request.getName())) {
+            throw new BusinessException(Messages.PRODUCT_ALREADY_EXISTS);
+        }
 
         Product product = productMapper.toEntity(request);
+
         Product saved = productRepository.save(product);
 
         LOGGER.info("Product created successfully [id={}]", saved.getId());
@@ -54,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(
                         () -> {
                             LOGGER.warn("Product not found [id={}]", id);
-                            return new ResourceNotFoundException("Producto no encontrado.");
+                            return new ResourceNotFoundException(Messages.PRODUCT_NOT_FOUND);
                         }
                 );
 
@@ -64,6 +73,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
+        LOGGER.info("Getting all products.");
 
         return productRepository
                 .findAllByDeletedAtIsNull()
@@ -75,15 +85,23 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
+        LOGGER.info(
+                "Update product [name={}, type={}, price={}]",
+                request.getName(),
+                request.getProductType(),
+                request.getPrice()
+        );
+
         Product product = productRepository
                 .findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(
-                        () -> new ResourceNotFoundException("Product not found.")
+                        () -> new ResourceNotFoundException(Messages.PRODUCT_NOT_FOUND)
                 );
 
         if (!product.getName().equalsIgnoreCase(request.getName())
-                && productRepository.existsByNameAndDeletedAtIsNull(request.getName()))
-            throw new ResourceNotFoundException("Ya existe un producto con ese nombre");
+                && productRepository.existsByNameAndDeletedAtIsNull(request.getName())) {
+            throw new BusinessException(Messages.PRODUCT_ALREADY_EXISTS);
+        }
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -92,6 +110,12 @@ public class ProductServiceImpl implements ProductService {
         product.setProductType(request.getProductType());
 
         Product updated = productRepository.save(product);
+
+        LOGGER.info(
+                "Product updated successfully [id={}, name={}]",
+                updated.getId(),
+                updated.getName()
+        );
 
         return productMapper.toResponse(updated);
     }

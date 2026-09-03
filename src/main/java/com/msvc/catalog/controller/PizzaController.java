@@ -42,7 +42,7 @@ public class PizzaController {
 
     @Operation(
             summary = "Create a pizza",
-            description = "Creates a pizza configuration for an existing product."
+            description = "Creates a pizza configuration for an existing pizza."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
