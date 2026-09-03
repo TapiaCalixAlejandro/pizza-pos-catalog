@@ -3,10 +3,13 @@ package com.msvc.catalog.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -15,18 +18,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
-//@Table(name = "pizzas")
+@Entity
+@Table(name = "pizzas")
 public class Pizza {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", nullable = false, unique = true)
-    private Long productId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "product_id",
+            nullable = false,
+            unique = true
+    )
+    private Product product;
 
-    @Column(name = "preparation_name", nullable = false)
+    @Column(name = "preparation_time", nullable = false)
     private Integer preparationTime;
 
     @OneToMany(
@@ -50,7 +58,7 @@ public class Pizza {
 
     public Pizza(
             Long id,
-            Long productId,
+            Product product,
             Integer preparationTime,
             List<PizzaIngredient> ingredients,
             LocalDateTime createdAt,
@@ -58,7 +66,7 @@ public class Pizza {
             LocalDateTime deletedAt
     ) {
         this.id = id;
-        this.productId = productId;
+        this.product = product;
         this.preparationTime = preparationTime;
         this.ingredients = ingredients;
         this.createdAt = createdAt;
@@ -74,12 +82,12 @@ public class Pizza {
         this.id = id;
     }
 
-    public Long getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductId(Long productId) {
-        this.productId = productId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public Integer getPreparationTime() {
