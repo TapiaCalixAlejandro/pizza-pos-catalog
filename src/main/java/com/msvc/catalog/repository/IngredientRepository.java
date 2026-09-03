@@ -16,4 +16,6 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 
     List<Ingredient> findAllByDeletedAtIsNull();
 
+    List<Ingredient> findAllByIdInAndDeletedAtIsNull(List<Long> ids);
+
 }
