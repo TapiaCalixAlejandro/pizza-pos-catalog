@@ -12,9 +12,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -128,6 +130,71 @@ public class PizzaController {
                                 pizzaResponses
                         )
                 );
+    }
+
+    @Operation(
+            summary = "Updated pizza by id",
+            description = "Updates an existing product in the catalog."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Pizza update successfully."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Pizza not found."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "Pizza already exists."
+            )
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PizzaResponse>> update(
+            @PathVariable Long id,
+            @Valid @RequestBody PizzaRequest request
+    ) {
+        PizzaResponse response = pizzaService.updatePizza(id, request);
+
+        return ResponseEntity.ok(
+                responseFactory.success(
+                        Messages.PIZZA_UPDATED,
+                        response
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Delete pizza by id",
+            description = "Soft deletes a pizza by its identifier."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Pizza deleted successfully."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Pizza not found."
+            )
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable Long id
+    ) {
+        pizzaService.deletePizzaById(id);
+
+        return ResponseEntity.ok(
+                responseFactory.success(
+                        Messages.PIZZA_DELETED,
+                        null
+                )
+        );
     }
 
 }

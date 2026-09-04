@@ -21,7 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PizzaServiceImpl implements PizzaService {
@@ -111,6 +114,7 @@ public class PizzaServiceImpl implements PizzaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PizzaResponse getPizzaById(Long id) {
         LOGGER.info(
                 "Getting pizza [id={}]",
@@ -137,24 +141,119 @@ public class PizzaServiceImpl implements PizzaService {
     }
 
     @Override
+    @Transactional
     public PizzaResponse updatePizza(Long id, PizzaRequest request) {
-        return null;
-    }
+        LOGGER.info(
+                "Update pizza [id={}, productId={}, preparationTime={}]",
+                id,
+                request.getProductId(),
+                request.getPreparationTime()
+        );
 
-    @Override
-    public void deletePizzaById(Long id) {
+        Pizza pizza = pizzaRepository
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(Messages.PIZZA_NOT_FOUND)
+                );
 
-    }
+        Product product = productRepository
+                .findByIdAndDeletedAtIsNull(request.getProductId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(Messages.PRODUCT_NOT_FOUND)
+                );
 
-    private void validateDuplicateIngredients(PizzaRequest request) {
-        long distinctIngredientCount = request
+        if (product.getProductType() != ProductType.PIZZA) {
+            throw new BusinessException(Messages.PRODUCT_MUST_BE_PIZZA);
+        }
+
+        if (!pizza.getProduct().getId().equals(request.getProductId())
+                && pizzaRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
+            throw new BusinessException(Messages.PIZZA_ALREADY_EXISTS);
+        }
+
+        validateDuplicateIngredients(request);
+
+        List<Long> ingredientIds = request
                 .getIngredients()
                 .stream()
                 .map(PizzaIngredientRequest::getIngredientId)
-                .distinct()
-                .count();
+                .toList();
 
-        if (distinctIngredientCount != request.getIngredients().size()) {
+        List<Ingredient> ingredients = ingredientRepository
+                .findAllByIdInAndDeletedAtIsNull(ingredientIds);
+
+        if (ingredients.size() != ingredientIds.size()) {
+            throw new ResourceNotFoundException(Messages.INGREDIENT_NOT_FOUND);
+        }
+
+        pizza.setProduct(product);
+        pizza.setPreparationTime(request.getPreparationTime());
+
+        List<PizzaIngredient> pizzaIngredients = request
+                .getIngredients()
+                .stream()
+                .map(item -> createPizzaIngredient(item, pizza, ingredients))
+                .toList();
+
+        pizza.getIngredients().clear();
+
+        pizzaRepository.flush();
+
+        pizza.getIngredients().addAll(pizzaIngredients);
+
+        Pizza updatePizza = pizzaRepository.save(pizza);
+
+        LOGGER.info(
+                "Pizza updated successfully [id={}, productId={}]",
+                updatePizza.getId(),
+                product.getId()
+        );
+
+        return pizzaMapper.toResponse(updatePizza);
+    }
+
+    @Override
+    @Transactional
+    public void deletePizzaById(Long id) {
+        LOGGER.info(
+                "Deleting pizza [id={}]",
+                id
+        );
+
+        Pizza pizza = pizzaRepository
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(Messages.PIZZA_NOT_FOUND)
+                );
+
+        pizza.setDeletedAt(LocalDateTime.now());
+
+        pizza
+                .getIngredients()
+                .forEach(
+                        ingredient -> ingredient.setDeletedAt(LocalDateTime.now())
+                );
+
+        pizzaRepository.save(pizza);
+
+        LOGGER.info(
+                "Pizza deleted successfully [id={}]",
+                id
+        );
+    }
+
+    private void validateDuplicateIngredients(PizzaRequest request) {
+        if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
+            throw new BusinessException(Messages.PIZZA_MUST_HAVE_INGREDIENTS);
+        }
+
+        Set<Long> ingredientIds = request
+                .getIngredients()
+                .stream()
+                .map(PizzaIngredientRequest::getIngredientId)
+                .collect(Collectors.toSet());
+
+        if (ingredientIds.size() != request.getIngredients().size()) {
             throw new BusinessException(Messages.INGREDIENT_DUPLICATE);
         }
     }

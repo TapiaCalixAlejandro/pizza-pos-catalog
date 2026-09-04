@@ -12,7 +12,7 @@ public final class Messages {
     public static final String PRODUCT_ALREADY_EXISTS = "A product with this name already exists.";
     public static final String PRODUCT_NOT_FOUND = "Product not found.";
     public static final String PRODUCTS_RETRIEVED = "Products retrieved successfully.";
-    public static final String PRODUCT_MUST_BE_PIZZA = "Product must be pizza";
+    public static final String PRODUCT_MUST_BE_PIZZA = "Product must have type PIZZA.";
 
     public static final String INGREDIENT_CREATED        = "Ingredient created successfully.";
     public static final String INGREDIENT_UPDATED        = "Ingredient updated successfully.";
@@ -21,7 +21,7 @@ public final class Messages {
     public static final String INGREDIENTS_RETRIEVED     = "Ingredients retrieved successfully.";
     public static final String INGREDIENT_ALREADY_EXISTS = "An ingredient with this name already exists.";
     public static final String INGREDIENT_NOT_FOUND      = "Ingredient not found.";
-    public static final String INGREDIENT_DUPLICATE      = "Ingredient duplicate.";
+    public static final String INGREDIENT_DUPLICATE      = "Ingredients duplicate are not allowed.";
 
     public static final String PIZZA_CREATED               = "Pizza created successfully.";
     public static final String PIZZA_ALREADY_EXISTS        = "Pizza already exists for this product.";
@@ -29,5 +29,7 @@ public final class Messages {
     public static final String PIZZA_NOT_FOUND             = "Pizza not found.";
     public static final String PIZZA_FOUND                 = "Pizza retrieved successfully.";
     public static final String PIZZA_RETRIEVED             = "Pizzas retrieved successfully.";
+    public static final String PIZZA_UPDATED               = "Pizza updated successfully.";
+    public static final String PIZZA_DELETED               = "Pizza deleted successfully.";
 
 }
