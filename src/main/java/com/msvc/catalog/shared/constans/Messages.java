@@ -14,6 +14,7 @@ public final class Messages {
     public static final String PRODUCTS_RETRIEVED = "Products retrieved successfully.";
     public static final String PRODUCT_MUST_BE_PIZZA = "Product must have type PIZZA.";
     public static final String PRODUCT_MUST_BE_DRINK = "Product must have type DRINK.";
+    public static final String PRODUCT_MUST_BE_DESSERT = "Product must have type DESSERT.";
 
     public static final String INGREDIENT_CREATED = "Ingredient created successfully.";
     public static final String INGREDIENT_UPDATED = "Ingredient updated successfully.";
@@ -40,5 +41,13 @@ public final class Messages {
     public static final String DRINK_UPDATED = "Drink updated successfully.";
     public static final String DRINK_RETRIEVED = "Drinks retrieved successfully.";
     public static final String DRINK_DELETED = "Drink deleted successfully.";
+
+    public static final String DESSERT_CREATED = "Dessert created successfully.";
+    public static final String DESSERT_ALREADY_EXISTS = "Dessert already exists.";
+    public static final String DESSERT_FOUND = "Dessert retrieved successfully.";
+    public static final String DESSERT_NOT_FOUND = "Dessert not found.";
+    public static final String DESSERT_RETRIEVED = "Desserts retrieved successfully.";
+    public static final String DESSERT_UPDATED = "Dessert updated successfully.";
+    public static final String DESSERT_DELETED = "Dessert deleted successfully.";
 
 }

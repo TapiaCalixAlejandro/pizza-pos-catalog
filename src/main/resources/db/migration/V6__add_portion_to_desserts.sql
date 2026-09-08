@@ -1,0 +1,2 @@
+ALTER TABLE desserts
+ALTER COLUMN portion TYPE INTEGER;
