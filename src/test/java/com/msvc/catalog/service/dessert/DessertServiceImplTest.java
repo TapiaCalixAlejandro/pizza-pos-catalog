@@ -279,6 +279,22 @@ public class DessertServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should return empty list when no desserts exist")
+    void shouldReturnEmptyListWhenNoDessertsExist() {
+        when(dessertRepository.findAllByDeletedAtIsNull())
+                .thenReturn(List.of());
+        when(dessertMapper.toResponseList(List.of()))
+                .thenReturn(List.of());
+
+        List<DessertResponse> responses = dessertService.findAllDesserts();
+
+        assertNotNull(responses);
+        assertEquals(0, responses.size());
+
+        verify(dessertRepository).findAllByDeletedAtIsNull();
+    }
+
+    @Test
     @DisplayName("Should update dessert successfully")
     void shouldUpdateDessertSuccessfully() {
         Product product = new Product();
