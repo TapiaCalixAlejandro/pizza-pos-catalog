@@ -10,6 +10,7 @@ import com.msvc.catalog.repository.DessertRepository;
 import com.msvc.catalog.repository.ProductRepository;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.exception.BusinessException;
+import com.msvc.catalog.shared.exception.ConflictException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ public class DessertServiceImpl implements DessertService {
         }
 
         if (dessertRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.DESSERT_ALREADY_EXISTS);
+            throw new ConflictException(Messages.DESSERT_ALREADY_EXISTS);
         }
 
         Dessert dessert = new Dessert();
@@ -134,7 +135,7 @@ public class DessertServiceImpl implements DessertService {
 
         if (!dessert.getProduct().getId().equals(request.getProductId())
             && dessertRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.DESSERT_ALREADY_EXISTS);
+            throw new ConflictException(Messages.DESSERT_ALREADY_EXISTS);
         }
 
         dessert.setProduct(product);
