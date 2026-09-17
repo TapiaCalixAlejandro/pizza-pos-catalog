@@ -13,20 +13,43 @@ on:
 
 jobs:
   build:
-    name: Build and SonarQube Analysis
+    name: Build, Test and SonarQube Analysis
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: pizza_catalog
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 12345
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d pizza_catalog"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
       - name: Build and test
-        run: mvn --batch-mode package -DskipTests
-        #run: mvn --batch-mode verify
+        run: mvn --batch-mode clean verify
+
+      - name: SonarQube Cloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn --batch-mode sonar:sonar \
+            -Dsonar.qualitygate.wait=true

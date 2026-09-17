@@ -12,6 +12,7 @@ import com.msvc.catalog.repository.DessertRepository;
 import com.msvc.catalog.repository.ProductRepository;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.exception.BusinessException;
+import com.msvc.catalog.shared.exception.ConflictException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -177,8 +178,8 @@ public class DessertServiceImplTest {
         when(dessertRepository.existsByProductIdAndDeletedAtIsNull(1L))
                 .thenReturn(true);
 
-        BusinessException exception = assertThrows(
-                BusinessException.class,
+        ConflictException exception = assertThrows(
+                ConflictException.class,
                 () -> dessertService.createDessert(request)
         );
 
@@ -469,8 +470,8 @@ public class DessertServiceImplTest {
         when(dessertRepository.existsByProductIdAndDeletedAtIsNull(2L))
                 .thenReturn(true);
 
-        BusinessException exception = assertThrows(
-                BusinessException.class,
+        ConflictException exception = assertThrows(
+                ConflictException.class,
                 () -> dessertService.updateDessert(1L, request)
         );
 
