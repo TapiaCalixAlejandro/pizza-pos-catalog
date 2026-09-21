@@ -63,10 +63,7 @@ public class Product {
             BigDecimal price,
             String image,
             ProductType productType,
-            ProductStatus productStatus,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt,
-            LocalDateTime deletedAt
+            ProductStatus productStatus
     ) {
         this.id = id;
         this.name = name;
@@ -75,9 +72,6 @@ public class Product {
         this.image = image;
         this.productType = productType;
         this.productStatus = productStatus;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.deletedAt = deletedAt;
     }
 
     public Long getId() {

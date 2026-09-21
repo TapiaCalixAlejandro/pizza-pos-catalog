@@ -6,6 +6,8 @@ import com.msvc.catalog.entity.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
@@ -14,5 +16,7 @@ public interface ProductMapper {
     Product toEntity(ProductRequest request);
 
     ProductResponse toResponse(Product product);
+
+    List<ProductResponse> toResponseList(List<Product> products);
 
 }
