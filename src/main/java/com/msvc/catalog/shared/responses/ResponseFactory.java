@@ -4,15 +4,21 @@ import com.msvc.catalog.shared.tracing.TraceProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
 public class ResponseFactory {
 
+    private final Clock clock;
     private final TraceProvider traceProvider;
 
-    public ResponseFactory(TraceProvider traceProvider) {
+    public ResponseFactory(
+            Clock clock,
+            TraceProvider traceProvider
+    ) {
+        this.clock = clock;
         this.traceProvider = traceProvider;
     }
 
@@ -30,7 +36,7 @@ public class ResponseFactory {
                 message,
                 getTraceId(),
                 data,
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
     }
 
@@ -47,7 +53,7 @@ public class ResponseFactory {
                 message,
                 details,
                 getTraceId(),
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
     }
 

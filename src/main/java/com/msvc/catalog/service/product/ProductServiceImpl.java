@@ -1,5 +1,6 @@
 package com.msvc.catalog.service.product;
 
+import com.msvc.catalog.configuration.ClockConfig;
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
 import com.msvc.catalog.entity.Product;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,13 +23,16 @@ public class ProductServiceImpl implements ProductService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductServiceImpl.class);
 
+    private final Clock clock;
     private final ProductMapper productMapper;
     private final ProductRepository productRepository;
 
     public ProductServiceImpl(
+            Clock clock,
             ProductMapper productMapper,
             ProductRepository productRepository
     ) {
+        this.clock = clock;
         this.productMapper = productMapper;
         this.productRepository = productRepository;
     }
@@ -36,10 +41,8 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         LOGGER.info(
-                "Creating product [name={}, type={}, price={}]",
-                request.getName(),
-                request.getProductType(),
-                request.getPrice()
+                "Creating product [type={}]",
+                request.getProductType()
         );
 
         if (productRepository.existsByNameAndDeletedAtIsNull(request.getName())) {
@@ -128,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
                         () -> new ResourceNotFoundException("Product not found.")
                 );
 
-        product.setDeletedAt(LocalDateTime.now());
+        product.setDeletedAt(LocalDateTime.now(clock));
 
         productRepository.save(product);
 

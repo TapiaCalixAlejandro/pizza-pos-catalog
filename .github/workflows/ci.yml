@@ -50,6 +50,19 @@ jobs:
       - name: SonarQube Cloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        id: sonar
         run: |
           mvn --batch-mode sonar:sonar \
-            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.wait=true \
+            -X 2>&1 | tee sonar-analysis.log
+        continue-on-error: true
+
+      - name: Show Quality Gate Failure Details
+        if: steps.sonar.outcome == 'failure'
+        run: |
+          echo "❌ Sonar Quality Gate FAILED"
+          grep -A 30 "Quality Gate" sonar-analysis.log
+
+      - name: Fail pipeline if Sonar failed
+        if: steps.sonar.outcome == 'failure'
+        run: exit 1  # ⬅️ Falla el pipeline DESPUÉS de mostrar el detalle
