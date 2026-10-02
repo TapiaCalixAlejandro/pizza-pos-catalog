@@ -15,6 +15,7 @@ import com.msvc.catalog.repository.PizzaRepository;
 import com.msvc.catalog.repository.ProductRepository;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.exception.BusinessException;
+import com.msvc.catalog.shared.exception.ConflictException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class PizzaServiceImpl implements PizzaService {
         }
 
         if (pizzaRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.PIZZA_ALREADY_EXISTS);
+            throw new ConflictException(Messages.PIZZA_ALREADY_EXISTS);
         }
 
         validateDuplicateIngredients(request);
@@ -168,7 +169,7 @@ public class PizzaServiceImpl implements PizzaService {
 
         if (!pizza.getProduct().getId().equals(request.getProductId())
                 && pizzaRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.PIZZA_ALREADY_EXISTS);
+            throw new ConflictException(Messages.PIZZA_ALREADY_EXISTS);
         }
 
         validateDuplicateIngredients(request);
