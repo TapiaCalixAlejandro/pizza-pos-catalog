@@ -10,6 +10,7 @@ import com.msvc.catalog.repository.DrinkRepository;
 import com.msvc.catalog.repository.ProductRepository;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.exception.BusinessException;
+import com.msvc.catalog.shared.exception.ConflictException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ public class DrinkServiceImpl implements DrinkService {
         }
 
         if (drinkRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.DRINK_ALREADY_EXISTS);
+            throw new ConflictException(Messages.DRINK_ALREADY_EXISTS);
         }
 
         Drink drink = new Drink();
@@ -130,7 +131,7 @@ public class DrinkServiceImpl implements DrinkService {
 
         if (!drink.getProduct().getId().equals(request.getProductId())
                 && drinkRepository.existsByProductIdAndDeletedAtIsNull(request.getProductId())) {
-            throw new BusinessException(Messages.DRINK_ALREADY_EXISTS);
+            throw new ConflictException(Messages.DRINK_ALREADY_EXISTS);
         }
 
         drink.setProduct(product);
