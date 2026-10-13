@@ -1,19 +1,23 @@
 package com.msvc.catalog.service.product;
 
-import com.msvc.catalog.configuration.ClockConfig;
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
 import com.msvc.catalog.entity.Product;
 import com.msvc.catalog.mapper.ProductMapper;
 import com.msvc.catalog.repository.ProductRepository;
+import com.msvc.catalog.service.storage.ImageStorageService;
+import com.msvc.catalog.service.storage.StoredImage;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.exception.BusinessException;
 import com.msvc.catalog.shared.exception.ResourceNotFoundException;
+import com.msvc.catalog.shared.validation.ImageValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,20 +30,26 @@ public class ProductServiceImpl implements ProductService {
     private final Clock clock;
     private final ProductMapper productMapper;
     private final ProductRepository productRepository;
+    private final ImageStorageService imageStorageService;
+    private final ImageValidator imageValidator;
 
     public ProductServiceImpl(
             Clock clock,
             ProductMapper productMapper,
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            ImageStorageService imageStorageService,
+            ImageValidator imageValidator
     ) {
         this.clock = clock;
         this.productMapper = productMapper;
         this.productRepository = productRepository;
+        this.imageStorageService = imageStorageService;
+        this.imageValidator = imageValidator;
     }
 
     @Override
     @Transactional
-    public ProductResponse createProduct(ProductRequest request) {
+    public ProductResponse createProduct(ProductRequest request, MultipartFile image) {
         LOGGER.info(
                 "Creating product [type={}]",
                 request.getProductType()
@@ -49,13 +59,39 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException(Messages.PRODUCT_ALREADY_EXISTS);
         }
 
-        Product product = productMapper.toEntity(request);
+        imageValidator.validate(image);
 
-        Product saved = productRepository.save(product);
+        String imageKey = null;
 
-        LOGGER.info("Product created successfully [id={}]", saved.getId());
+        try {
 
-        return productMapper.toResponse(saved);
+            imageKey = imageStorageService.store(image);
+            Product product = productMapper.toEntity(request);
+            product.setImage(imageKey);
+            Product saved = productRepository.save(product);
+
+            LOGGER.info(
+                    "Product created successfully [id={}]",
+                    saved.getId()
+            );
+
+            return productMapper.toResponse(saved);
+        } catch (IOException exception) {
+            if (imageKey != null) {
+                try {
+                    imageStorageService.delete(imageKey);
+                } catch (IOException cleanupException) {
+                    LOGGER.error(
+                            "Could not clean up image after failure [imageKey={}]",
+                            imageKey,
+                            cleanupException
+                    );
+                }
+            }
+
+            throw  new BusinessException("Could not store product image.");
+        }
+
     }
 
     @Override
@@ -87,7 +123,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductResponse updateProduct(Long id, ProductRequest request) {
+    public ProductResponse updateProduct(
+            Long id,
+            ProductRequest request,
+            MultipartFile image
+    ) {
         LOGGER.info(
                 "Update product [name={}, type={}, price={}]",
                 request.getName(),
@@ -106,35 +146,118 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException(Messages.PRODUCT_ALREADY_EXISTS);
         }
 
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setImage(request.getImage());
-        product.setProductType(request.getProductType());
+        String oldImageKey = product.getImage();
+        String newImageKey = null;
 
-        Product updated = productRepository.save(product);
+        try {
 
-        LOGGER.info(
-                "Product updated successfully [id={}, name={}]",
-                updated.getId(),
-                updated.getName()
-        );
+            if (image != null && !image.isEmpty()) {
+                imageValidator.validate(image);
+                newImageKey = imageStorageService.store(image);
+                product.setImage(newImageKey);
+            }
 
-        return productMapper.toResponse(updated);
+            product.setName(request.getName());
+            product.setDescription(request.getDescription());
+            product.setPrice(request.getPrice());
+            product.setProductType(request.getProductType());
+
+            Product updated = productRepository.save(product);
+
+            if (newImageKey != null
+                    && oldImageKey != null
+                    && !oldImageKey.equals(newImageKey)) {
+                imageStorageService.delete(oldImageKey);
+            }
+
+            LOGGER.info(
+                    "Product updated successfully [id={}, name={}]",
+                    updated.getId(),
+                    updated.getName()
+            );
+
+            return productMapper.toResponse(updated);
+
+        } catch (IOException exception) {
+
+            if (newImageKey != null) {
+                try {
+                    imageStorageService.delete(newImageKey);
+                } catch (IOException cleanupException) {
+                    LOGGER.error(
+                            "Could not clean up new image [imageKey={}]",
+                            newImageKey,
+                            cleanupException
+                    );
+                }
+            }
+
+            throw new BusinessException("Could not update product image");
+
+        }
+
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository
                 .findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(
-                        () -> new ResourceNotFoundException("Product not found.")
+                        () -> new ResourceNotFoundException(Messages.PRODUCT_NOT_FOUND)
                 );
+
+        String imageKey = product.getImage();
 
         product.setDeletedAt(LocalDateTime.now(clock));
 
         productRepository.save(product);
 
-        LOGGER.info("Product soft deleted [id={}]", id);
+        if (imageKey != null && !imageKey.isBlank()) {
+
+            try {
+                imageStorageService.delete(imageKey);
+            } catch (IOException e) {
+                LOGGER.error(
+                        "Could not delete product image [productId={}, imageKey={}]",
+                        id,
+                        imageKey,
+                        e
+                );
+            }
+        }
+
+        LOGGER.info(
+                "Product soft deleted [id={}]",
+                id
+        );
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StoredImage getProductImage(Long id) {
+        Product product = productRepository
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(Messages.PRODUCT_NOT_FOUND)
+                );
+
+        if (product.getImage() == null
+                || product.getImage().isBlank()) {
+            throw new ResourceNotFoundException("Product image not found.");
+        }
+
+        try {
+            return imageStorageService.load(product.getImage());
+        } catch (IOException e) {
+            LOGGER.error(
+                    "Could not load product image [id={}]",
+                    id,
+                    e
+            );
+
+            throw new ResourceNotFoundException("Product image not found.");
+        }
     }
 }

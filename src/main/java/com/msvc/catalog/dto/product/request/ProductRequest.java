@@ -24,8 +24,9 @@ public class ProductRequest {
     @DecimalMin(value = "0.01", message = "Price must be greater than zero.")
     private BigDecimal price;
 
-    @Size(max = 255)
-    private String image;
+//    @NotBlank(message = "Image is required.")
+//    @Size(max = 255, message = "Image must not exceed 255 characters.")
+//    private String image;
 
     @NotNull(message = "Product type is required.")
     private ProductType productType;
@@ -54,13 +55,13 @@ public class ProductRequest {
         this.price = price;
     }
 
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
+//    public String getImage() {
+//        return image;
+//    }
+//
+//    public void setImage(String image) {
+//        this.image = image;
+//    }
 
     public ProductType getProductType() {
         return productType;
