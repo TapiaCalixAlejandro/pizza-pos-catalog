@@ -17,4 +17,6 @@ public interface PizzaService {
 
     void deletePizzaById(Long id);
 
+    PizzaResponse getPizzaByProductId(Long productId);
+
 }
