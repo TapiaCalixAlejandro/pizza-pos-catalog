@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -195,6 +196,22 @@ public class PizzaController {
                         null
                 )
         );
+    }
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<ApiResponse<PizzaResponse>> findByProductId(
+            @PathVariable Long productId
+    ) {
+        PizzaResponse response = pizzaService.getPizzaByProductId(productId);
+
+        return ResponseEntity
+                .ok(
+                        responseFactory
+                                .success(
+                                        Messages.PIZZA_FOUND,
+                                        response
+                                )
+                );
     }
 
 }

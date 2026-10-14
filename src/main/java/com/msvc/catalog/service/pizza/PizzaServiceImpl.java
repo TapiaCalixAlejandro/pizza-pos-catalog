@@ -243,6 +243,23 @@ public class PizzaServiceImpl implements PizzaService {
         );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PizzaResponse getPizzaByProductId(Long productId) {
+        LOGGER.info(
+                "Getting pizza by productId [productId={}]",
+                productId
+        );
+
+        Pizza pizza = pizzaRepository
+                .findByProductIdAndDeletedAtIsNull(productId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(Messages.PIZZA_NOT_FOUND)
+                );
+
+        return pizzaMapper.toResponse(pizza);
+    }
+
     private void validateDuplicateIngredients(PizzaRequest request) {
         if (request.getIngredients() == null || request.getIngredients().isEmpty()) {
             throw new BusinessException(Messages.PIZZA_MUST_HAVE_INGREDIENTS);
