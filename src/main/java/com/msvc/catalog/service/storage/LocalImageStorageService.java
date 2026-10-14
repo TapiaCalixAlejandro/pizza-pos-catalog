@@ -1,5 +1,6 @@
 package com.msvc.catalog.service.storage;
 
+import com.msvc.catalog.shared.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -84,7 +85,7 @@ public class LocalImageStorageService implements ImageStorageService {
         }
 
         if (!Files.exists(targetLocation)) {
-            throw new IOException("Image not found.");
+            throw new ResourceNotFoundException("Image not found.");
         }
 
         String contentType = Files.probeContentType(targetLocation);

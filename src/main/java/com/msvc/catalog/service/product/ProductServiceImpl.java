@@ -3,6 +3,7 @@ package com.msvc.catalog.service.product;
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
 import com.msvc.catalog.entity.Product;
+import com.msvc.catalog.enums.ProductType;
 import com.msvc.catalog.mapper.ProductMapper;
 import com.msvc.catalog.repository.ProductRepository;
 import com.msvc.catalog.service.storage.ImageStorageService;
@@ -259,5 +260,14 @@ public class ProductServiceImpl implements ProductService {
 
             throw new ResourceNotFoundException("Product image not found.");
         }
+    }
+
+    @Override
+    public List<ProductResponse> getProductByType(ProductType type) {
+        return productRepository
+                .findByProductTypeAndDeletedAtIsNull(type)
+                .stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 }

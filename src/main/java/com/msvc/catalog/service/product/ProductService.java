@@ -2,6 +2,7 @@ package com.msvc.catalog.service.product;
 
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
+import com.msvc.catalog.enums.ProductType;
 import com.msvc.catalog.service.storage.StoredImage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,5 +25,7 @@ public interface ProductService {
     void deleteProduct(Long id);
 
     StoredImage getProductImage(Long id);
+
+    List<ProductResponse> getProductByType(ProductType type);
 
 }

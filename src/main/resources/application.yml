@@ -33,4 +33,4 @@ server:
 
 app:
   storage:
-    location: ./uploads
+    location: C:/Ambiente/Spring/myWorkspace/pizza-pos/uploads

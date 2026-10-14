@@ -2,6 +2,7 @@ package com.msvc.catalog.controller;
 
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
+import com.msvc.catalog.enums.ProductType;
 import com.msvc.catalog.service.product.ProductService;
 import com.msvc.catalog.service.storage.StoredImage;
 import com.msvc.catalog.shared.constans.Messages;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +33,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@CrossOrigin(origins = "http://localhost:5173")
 @Tag(
         name = "Products",
         description = "Operations related to product management."
@@ -248,4 +251,21 @@ public class ProductController {
                 )
                 .body(image.content());
     }
+
+    @GetMapping("/type/{productType}")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> findByType(
+            @PathVariable ProductType productType
+    ) {
+        List<ProductResponse> responseList = productService.getProductByType(productType);
+
+        return ResponseEntity
+                .ok(
+                        responseFactory
+                                .success(
+                                        Messages.PRODUCTS_RETRIEVED,
+                                        responseList
+                                )
+                );
+    }
+
 }
