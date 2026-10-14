@@ -1,6 +1,7 @@
 package com.msvc.catalog.repository;
 
 import com.msvc.catalog.entity.Product;
+import com.msvc.catalog.enums.ProductType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,5 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByDeletedAtIsNull();
 
     boolean existsByNameAndDeletedAtIsNull(String name);
+
+    List<Product> findByProductTypeAndDeletedAtIsNull(ProductType productType);
 
 }

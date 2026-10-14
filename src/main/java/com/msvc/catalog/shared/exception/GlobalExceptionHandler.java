@@ -73,4 +73,18 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidImageException(
+            InvalidImageException exception
+    ) {
+        return ResponseEntity
+                .badRequest()
+                .body(
+                        responseFactory.error(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage()
+                        )
+                );
+    }
+
 }

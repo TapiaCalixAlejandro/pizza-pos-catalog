@@ -2,29 +2,38 @@ package com.msvc.catalog.controller;
 
 import com.msvc.catalog.dto.product.request.ProductRequest;
 import com.msvc.catalog.dto.product.response.ProductResponse;
+import com.msvc.catalog.enums.ProductType;
 import com.msvc.catalog.service.product.ProductService;
+import com.msvc.catalog.service.storage.StoredImage;
 import com.msvc.catalog.shared.constans.Messages;
 import com.msvc.catalog.shared.responses.ApiResponse;
 import com.msvc.catalog.shared.responses.ResponseFactory;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@CrossOrigin(origins = "http://localhost:5173")
 @Tag(
         name = "Products",
         description = "Operations related to product management."
@@ -64,11 +73,12 @@ public class ProductController {
                     description = "Internal server error."
             )
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProductResponse>> create(
-            @Valid @RequestBody ProductRequest request
+            @Valid @RequestPart("product") ProductRequest request,
+            @RequestPart("image")MultipartFile image
     ) {
-        ProductResponse response = productService.createProduct(request);
+        ProductResponse response = productService.createProduct(request, image);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -81,7 +91,7 @@ public class ProductController {
     }
 
     @Operation(
-            summary = "Get product get id",
+            summary = "Get product by id",
             description = "Returns a product by its identifier."
     )
     @ApiResponses({
@@ -140,7 +150,7 @@ public class ProductController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "Product update successfully."
+                    description = "Product updated successfully."
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -155,12 +165,27 @@ public class ProductController {
                     description = "Product already exists."
             )
     })
-    @PutMapping("/{id}")
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = {
+                            @Encoding(
+                                    name = "product",
+                                    contentType = MediaType.APPLICATION_JSON_VALUE
+                            )
+                    }
+            )
+    )
     public ResponseEntity<ApiResponse<ProductResponse>> update(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request
+            @Valid @RequestPart("product") ProductRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        ProductResponse response = productService.updateProduct(id, request);
+        ProductResponse response = productService.updateProduct(id, request, image);
 
         return ResponseEntity
                 .ok(
@@ -198,4 +223,49 @@ public class ProductController {
                 )
         );
     }
+
+    @Operation(
+            summary = "Get product image",
+            description = "Returns the image associated with a product."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Product image retrieved successfully."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Product or image not found."
+            )
+    })
+    @GetMapping("/{id}/image")
+    public ResponseEntity<byte[]> getProductImage(
+            @PathVariable Long id
+    ) {
+        StoredImage image = productService.getProductImage(id);
+
+        return ResponseEntity
+                .ok()
+                .contentType(
+                        MediaType.parseMediaType(image.contentType())
+                )
+                .body(image.content());
+    }
+
+    @GetMapping("/type/{productType}")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> findByType(
+            @PathVariable ProductType productType
+    ) {
+        List<ProductResponse> responseList = productService.getProductByType(productType);
+
+        return ResponseEntity
+                .ok(
+                        responseFactory
+                                .success(
+                                        Messages.PRODUCTS_RETRIEVED,
+                                        responseList
+                                )
+                );
+    }
+
 }
